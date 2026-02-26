@@ -25,7 +25,13 @@ public class Job {
 
     private boolean active = true;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+   @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now(); // or use ZoneOffset.UTC
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
 
     @ManyToOne
     @JoinColumn(name = "recruiter_id")
