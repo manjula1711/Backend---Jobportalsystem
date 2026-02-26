@@ -42,7 +42,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/").permitAll()
 
-                .requestMatchers("/auth/**").permitAll() 
+                .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/jobs/**").permitAll()
 
                 .requestMatchers("/api/recruiter/**").hasAuthority("RECRUITER")
