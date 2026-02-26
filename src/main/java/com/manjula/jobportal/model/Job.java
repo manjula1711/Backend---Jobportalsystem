@@ -25,13 +25,12 @@ public class Job {
 
     private boolean active = true;
 
-   @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now(); // or use ZoneOffset.UTC
-    }
+    private LocalDateTime createdAt; // ✅ declare the field
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now(); // automatically set when inserting
+    }
 
     @ManyToOne
     @JoinColumn(name = "recruiter_id")
@@ -39,88 +38,39 @@ public class Job {
 
     // ===== GETTERS & SETTERS =====
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
 
-    public String getCompanyName() {
-        return companyName;
-    }
+    public String getCompanyName() { return companyName; }
+    public void setCompanyName(String companyName) { this.companyName = companyName; }
 
-    public void setCompanyName(String companyName) {
-        this.companyName = companyName;
-    }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-    public String getTitle() {
-        return title;
-    }
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+    public String getSalary() { return salary; }
+    public void setSalary(String salary) { this.salary = salary; }
 
-    public String getLocation() {
-        return location;
-    }
+    public String getExperience() { return experience; }
+    public void setExperience(String experience) { this.experience = experience; }
 
-    public void setLocation(String location) {
-        this.location = location;
-    }
+    public String getJobType() { return jobType; }
+    public void setJobType(String jobType) { this.jobType = jobType; }
 
-    public String getSalary() {
-        return salary;
-    }
+    public String getSkills() { return skills; }
+    public void setSkills(String skills) { this.skills = skills; }
 
-    public void setSalary(String salary) {
-        this.salary = salary;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public String getExperience() {
-        return experience;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public void setExperience(String experience) {
-        this.experience = experience;
-    }
+    public User getPostedBy() { return postedBy; }
+    public void setPostedBy(User postedBy) { this.postedBy = postedBy; }
 
-    public String getJobType() {
-        return jobType;
-    }
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
 
-    public void setJobType(String jobType) {
-        this.jobType = jobType;
-    }
-
-    public String getSkills() {
-        return skills;
-    }
-
-    public void setSkills(String skills) {
-        this.skills = skills;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public User getPostedBy() {
-        return postedBy;
-    }
-
-    public void setPostedBy(User postedBy) {
-        this.postedBy = postedBy;
-    }
-  
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
-    }
 }
