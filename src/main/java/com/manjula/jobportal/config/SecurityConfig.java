@@ -34,20 +34,23 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-            .cors(Customizer.withDefaults()) // ✅ ENABLE CORS
+            .cors(Customizer.withDefaults()) // ✅ Enable CORS from corsConfigurationSource()
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // ✅ Allow preflight requests
+                // ✅ Allow preflight
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/").permitAll()
 
+                // ✅ Public endpoints
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/jobs/**").permitAll()
 
+                // ✅ Role protected
                 .requestMatchers("/api/recruiter/**").hasAuthority("RECRUITER")
                 .requestMatchers("/api/seeker/**").hasAuthority("SEEKER")
                 .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+
                 .anyRequest().authenticated()
             );
 
@@ -57,15 +60,28 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ✅ CORS CONFIG (React -> Spring Boot)
+    // ✅ CORS CONFIG (Vercel + Localhost)
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of("http://localhost:3000","https://frontend-jobportalsystem-5m71nb0rk-manjula-bs-projects.vercel.app"));
+        // ✅ IMPORTANT:
+        // Use allowedOriginPatterns to support Vercel preview URLs
+        config.setAllowedOriginPatterns(List.of(
+                "http://localhost:3000",
+                "https://frontend-jobportalsystem.vercel.app",
+                "https://*.vercel.app"
+        ));
+
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+
+        // ✅ allow all headers (preflight will succeed)
+        config.setAllowedHeaders(List.of("*"));
+
+        // ✅ if you send JWT in response header
         config.setExposedHeaders(List.of("Authorization"));
+
+        // ✅ allow cookies/credentials if needed
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
