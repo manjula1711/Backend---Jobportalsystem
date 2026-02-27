@@ -42,13 +42,13 @@ public class SecurityConfig {
                 // ✅ Preflight
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // ✅ Explicitly allow AUTH POSTS (fixes 403 issues)
+                // ✅ Explicit AUTH endpoints (prevents weird 403)
                 .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/forgot-password").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/reset-password").permitAll()
 
-                // ✅ Allow any other auth endpoints too
+                // ✅ Any other auth endpoints
                 .requestMatchers("/api/auth/**").permitAll()
 
                 // ✅ Public jobs
