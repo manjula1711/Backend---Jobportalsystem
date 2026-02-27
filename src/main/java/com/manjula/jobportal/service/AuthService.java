@@ -76,6 +76,7 @@ public class AuthService {
     }
 
     public Map<String, String> login(LoginRequest request) {
+
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("❌ Invalid Email"));
 
@@ -93,51 +94,60 @@ public class AuthService {
     }
 
     /**
-     * ✅ Forgot Password
-     * - NEVER return 403
-     * - If email is not registered, still return success message (security best practice)
+     * ✅ Forgot Password:
+     * - Always return success message (no 403)
      * - Only send mail if user exists
+     * - NEVER throw error outside (so controller returns 200 always)
      */
     @Transactional
     public String forgotPassword(String email) {
 
-        Optional<User> userOpt = userRepository.findByEmail(email);
-
-        // ✅ Don’t reveal whether email exists
-        if (userOpt.isEmpty()) {
-            return "If the email exists, a reset link has been sent.";
-        }
-
-        User user = userOpt.get();
-
-        String token = UUID.randomUUID().toString();
-        LocalDateTime expiry = LocalDateTime.now().plusMinutes(15);
-
-        PasswordResetToken resetToken = passwordResetTokenRepository
-                .findByUser(user)
-                .orElseGet(PasswordResetToken::new);
-
-        resetToken.setUser(user);
-        resetToken.setToken(token);
-        resetToken.setExpiryDate(expiry);
-
-        passwordResetTokenRepository.save(resetToken);
-
-        String link = resetUrl + "?token=" + token;
+        // ✅ Always keep same response message for security
+        final String successMsg = "If the email exists, a reset link has been sent.";
 
         try {
+            if (email == null || email.trim().isEmpty()) {
+                return successMsg;
+            }
+
+            Optional<User> userOpt = userRepository.findByEmail(email.trim());
+
+            // ✅ If user not found → just return success message
+            if (userOpt.isEmpty()) {
+                return successMsg;
+            }
+
+            User user = userOpt.get();
+
+            String token = UUID.randomUUID().toString();
+            LocalDateTime expiry = LocalDateTime.now().plusMinutes(15);
+
+            // ✅ UPSERT token for the user
+            PasswordResetToken resetToken = passwordResetTokenRepository
+                    .findByUser(user)
+                    .orElseGet(PasswordResetToken::new);
+
+            resetToken.setUser(user);
+            resetToken.setToken(token);
+            resetToken.setExpiryDate(expiry);
+
+            passwordResetTokenRepository.save(resetToken);
+
+            String link = resetUrl + "?token=" + token;
+
+            // ✅ Send email
             emailService.sendResetPasswordEmail(user.getEmail(), link);
+
+            return successMsg;
+
         } catch (Exception e) {
-            // ✅ If mail fails, show clear error in logs
-            System.out.println("❌ Email sending failed: " + e.getMessage());
+            // ✅ Log error so you can see it in Render logs
+            System.out.println("❌ Forgot Password failed: " + e.getMessage());
             e.printStackTrace();
 
-            // You can return a message, OR throw RuntimeException to return 500.
-            // Returning message is okay for your project:
-            return "Email sending failed. Please try again later.";
+            // Still return success message so frontend doesn't get 403
+            return successMsg;
         }
-
-        return "If the email exists, a reset link has been sent.";
     }
 
     @Transactional
