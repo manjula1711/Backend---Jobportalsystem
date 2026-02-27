@@ -34,16 +34,24 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-            .cors(Customizer.withDefaults()) // ✅ Enable CORS from corsConfigurationSource()
+            .cors(Customizer.withDefaults())
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // ✅ Allow preflight
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/").permitAll()
 
-                // ✅ Public endpoints
+                // ✅ Preflight
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                // ✅ Explicitly allow AUTH POSTS (fixes 403 issues)
+                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/forgot-password").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/reset-password").permitAll()
+
+                // ✅ Allow any other auth endpoints too
                 .requestMatchers("/api/auth/**").permitAll()
+
+                // ✅ Public jobs
                 .requestMatchers("/api/jobs/**").permitAll()
 
                 // ✅ Role protected
@@ -65,8 +73,6 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // ✅ IMPORTANT:
-        // Use allowedOriginPatterns to support Vercel preview URLs
         config.setAllowedOriginPatterns(List.of(
                 "http://localhost:3000",
                 "https://frontend-jobportalsystem.vercel.app",
@@ -74,14 +80,8 @@ public class SecurityConfig {
         ));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
-        // ✅ allow all headers (preflight will succeed)
         config.setAllowedHeaders(List.of("*"));
-
-        // ✅ if you send JWT in response header
         config.setExposedHeaders(List.of("Authorization"));
-
-        // ✅ allow cookies/credentials if needed
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
