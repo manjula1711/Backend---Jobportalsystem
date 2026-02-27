@@ -30,7 +30,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // ✅ IMPORTANT: Never run JWT on auth endpoints
+        // ✅ IMPORTANT: Do not run JWT for auth endpoints
         if (path.startsWith("/api/auth/")) {
             filterChain.doFilter(request, response);
             return;
