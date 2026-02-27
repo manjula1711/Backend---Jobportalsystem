@@ -92,12 +92,23 @@ public class AuthService {
         return response;
     }
 
-    // ✅ Forgot Password: UPSERT token so UNIQUE(user_id) never breaks
+    /**
+     * ✅ Forgot Password
+     * - NEVER return 403
+     * - If email is not registered, still return success message (security best practice)
+     * - Only send mail if user exists
+     */
     @Transactional
     public String forgotPassword(String email) {
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Email not found"));
+        Optional<User> userOpt = userRepository.findByEmail(email);
+
+        // ✅ Don’t reveal whether email exists
+        if (userOpt.isEmpty()) {
+            return "If the email exists, a reset link has been sent.";
+        }
+
+        User user = userOpt.get();
 
         String token = UUID.randomUUID().toString();
         LocalDateTime expiry = LocalDateTime.now().plusMinutes(15);
@@ -114,10 +125,19 @@ public class AuthService {
 
         String link = resetUrl + "?token=" + token;
 
-        // If Gmail credentials are correct, email will arrive
-        emailService.sendResetPasswordEmail(user.getEmail(), link);
+        try {
+            emailService.sendResetPasswordEmail(user.getEmail(), link);
+        } catch (Exception e) {
+            // ✅ If mail fails, show clear error in logs
+            System.out.println("❌ Email sending failed: " + e.getMessage());
+            e.printStackTrace();
 
-        return "Reset link sent to email";
+            // You can return a message, OR throw RuntimeException to return 500.
+            // Returning message is okay for your project:
+            return "Email sending failed. Please try again later.";
+        }
+
+        return "If the email exists, a reset link has been sent.";
     }
 
     @Transactional
