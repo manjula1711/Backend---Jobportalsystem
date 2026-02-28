@@ -38,7 +38,7 @@ public class AuthService {
     private JwtUtil jwtUtil;
 
     @Autowired
-    private EmailService emailService;
+    private BrevoEmailService emailService;
 
     @Value("${app.frontend.reset-url}")
     private String resetUrl;
