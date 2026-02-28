@@ -11,24 +11,36 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
-   public void sendResetPasswordEmail(String toEmail, String resetLink) {
+    public void sendResetPasswordEmail(String toEmail, String resetLink) {
 
-    SimpleMailMessage message = new SimpleMailMessage();
+        System.out.println("✅ EmailService called. TO = " + toEmail);
+        System.out.println("✅ ResetLink = " + resetLink);
 
-    // message.setFrom("jobportalsystemapplication@gmail.com"); // ADD THIS
-    message.setTo(toEmail);
-    message.setSubject("Job Portal - Password Reset Request");
+        SimpleMailMessage message = new SimpleMailMessage();
 
-    message.setText(
-            "Hi,\n\n" +
-            "We received a request to reset your password.\n\n" +
-            "Click the link below to reset your password:\n" +
-            resetLink + "\n\n" +
-            "This link will expire in 15 minutes.\n\n" +
-            "If you did not request this, please ignore this email.\n\n" +
-            "Thanks,\nJob Portal Team"
-    );
+        // ✅ For now keep it WITHOUT setFrom (Brevo will use default sender)
+        // After sender verification in Brevo, you can enable this:
+        // message.setFrom("jobportalsystemapplication@gmail.com");
 
-    mailSender.send(message);
-}
+        message.setTo(toEmail);
+        message.setSubject("Job Portal - Password Reset Request");
+        message.setText(
+                "Hi,\n\n" +
+                "We received a request to reset your password.\n\n" +
+                "Click the link below to reset your password:\n" +
+                resetLink + "\n\n" +
+                "This link will expire in 15 minutes.\n\n" +
+                "If you did not request this, please ignore this email.\n\n" +
+                "Thanks,\nJob Portal Team"
+        );
+
+        try {
+            mailSender.send(message);
+            System.out.println("✅ Mail sent successfully via SMTP");
+        } catch (Exception e) {
+            System.out.println("❌ SMTP mail failed: " + e.getMessage());
+            e.printStackTrace();
+            throw e; // ✅ important: so API will fail instead of showing fake 200 OK
+        }
+    }
 }
