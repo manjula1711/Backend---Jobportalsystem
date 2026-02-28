@@ -5,53 +5,58 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class BrevoEmailService {
 
-    @Value("${BREVO_API_KEY}")
-    private String apiKey;
+    @Value("${brevo.api.key}")
+    private String brevoApiKey;
 
-    private final String BREVO_URL = "https://api.brevo.com/v3/smtp/email";
+    private final RestTemplate restTemplate = new RestTemplate();
 
     public void sendResetPasswordEmail(String toEmail, String resetLink) {
 
-        RestTemplate restTemplate = new RestTemplate();
+        String url = "https://api.brevo.com/v3/smtp/email";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("api-key", apiKey);
+
+        // ✅ IMPORTANT: Brevo expects this header name
+        headers.set("api-key", brevoApiKey);
 
         Map<String, Object> body = new HashMap<>();
 
-        // Sender
+        // ✅ sender must be verified in Brevo (your screenshot shows verified)
         Map<String, String> sender = new HashMap<>();
         sender.put("name", "Job Portal");
         sender.put("email", "jobportalsystemapplication@gmail.com");
+        body.put("sender", sender);
 
-        // Receiver
         Map<String, String> to = new HashMap<>();
         to.put("email", toEmail);
+        body.put("to", new Object[]{to});
 
-        body.put("sender", sender);
-        body.put("to", new Map[]{to});
-        body.put("subject", "Reset your password");
+        body.put("subject", "Job Portal - Password Reset Request");
 
-        String htmlContent =
-                "<h2>Password Reset</h2>" +
-                "<p>Click the link below to reset your password:</p>" +
-                "<a href='" + resetLink + "'>Reset Password</a>" +
-                "<p>This link expires in 15 minutes.</p>";
+        String text =
+                "Hi,\n\n" +
+                "We received a request to reset your password.\n\n" +
+                "Click the link below to reset your password:\n" +
+                resetLink + "\n\n" +
+                "This link will expire in 15 minutes.\n\n" +
+                "Thanks,\nJob Portal Team";
 
-        body.put("htmlContent", htmlContent);
+        body.put("textContent", text);
 
-        HttpEntity<Map<String, Object>> request =
-                new HttpEntity<>(body, headers);
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
 
         ResponseEntity<String> response =
-                restTemplate.postForEntity(BREVO_URL, request, String.class);
+                restTemplate.postForEntity(url, entity, String.class);
 
-        System.out.println("Brevo Response: " + response.getBody());
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new RuntimeException("Brevo failed: " + response.getStatusCode() + " -> " + response.getBody());
+        }
     }
 }
