@@ -7,8 +7,8 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -22,14 +22,14 @@ public class JwtFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtil jwtUtil;
 
+    // ✅ Skip JWT for these paths
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        // ✅ skip JWT for auth and public endpoints
         return path.startsWith("/api/auth/")
-                || path.startsWith("/api/jobs/")
+                || path.startsWith("/api/test/")
                 || path.equals("/")
-                || path.startsWith("/actuator/");
+                || path.equals("/error");
     }
 
     @Override
