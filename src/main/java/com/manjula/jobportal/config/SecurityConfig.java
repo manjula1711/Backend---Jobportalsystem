@@ -3,16 +3,21 @@ package com.manjula.jobportal.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.authentication.AuthenticationManager;
+
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -33,23 +38,14 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-
-                // ✅ allow preflight
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // ✅ allow root and health
-                .requestMatchers("/").permitAll()
-
-                // ✅ allow auth endpoints without token
+                // ✅ PUBLIC
+                .requestMatchers("/", "/actuator/health").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
-
-                // ✅ allow jobs for all
                 .requestMatchers("/api/jobs/**").permitAll()
 
-                // ✅ allow test email endpoint (TEMP)
-                .requestMatchers("/api/test/**").permitAll()
-
-                // ✅ role protected
+                // ✅ PROTECTED
                 .requestMatchers("/api/recruiter/**").hasAuthority("RECRUITER")
                 .requestMatchers("/api/seeker/**").hasAuthority("SEEKER")
                 .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
@@ -57,7 +53,6 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             );
 
-        // ✅ JWT filter
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -65,9 +60,9 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-
         CorsConfiguration config = new CorsConfiguration();
 
+        // ✅ vercel + localhost
         config.setAllowedOriginPatterns(List.of(
                 "http://localhost:3000",
                 "https://frontend-jobportalsystem.vercel.app",
