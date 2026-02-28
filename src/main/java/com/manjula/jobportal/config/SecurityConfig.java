@@ -34,24 +34,28 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-            .cors(Customizer.withDefaults())
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .cors(Customizer.withDefaults())
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .authorizeHttpRequests(auth -> auth
+                        // ✅ preflight
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // ✅ PUBLIC
-                .requestMatchers("/", "/actuator/health").permitAll()
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/jobs/**").permitAll()
+                        // ✅ PUBLIC
+                        .requestMatchers("/", "/error").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/test/**").permitAll()   // ✅ IMPORTANT FOR TEST URL
+                        .requestMatchers("/api/jobs/**").permitAll()
 
-                // ✅ PROTECTED
-                .requestMatchers("/api/recruiter/**").hasAuthority("RECRUITER")
-                .requestMatchers("/api/seeker/**").hasAuthority("SEEKER")
-                .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+                        // ✅ PROTECTED
+                        .requestMatchers("/api/recruiter/**").hasAuthority("RECRUITER")
+                        .requestMatchers("/api/seeker/**").hasAuthority("SEEKER")
+                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
 
-                .anyRequest().authenticated()
-            );
+                        .anyRequest().authenticated()
+                );
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -62,7 +66,6 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // ✅ vercel + localhost
         config.setAllowedOriginPatterns(List.of(
                 "http://localhost:3000",
                 "https://frontend-jobportalsystem.vercel.app",
