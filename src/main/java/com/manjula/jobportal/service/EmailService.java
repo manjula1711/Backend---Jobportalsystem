@@ -15,7 +15,7 @@ public class EmailService {
 
     SimpleMailMessage message = new SimpleMailMessage();
 
-    message.setFrom("jobportalsystemapplication@gmail.com"); // ADD THIS
+    // message.setFrom("jobportalsystemapplication@gmail.com"); // ADD THIS
     message.setTo(toEmail);
     message.setSubject("Job Portal - Password Reset Request");
 
